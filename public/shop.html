@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | ARTISAN.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { brand: { cream: '#F4EFE6', brown: '#4A3022', accent: '#855E42' } },
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-white font-sans text-stone-900">
+
+    <nav class="flex flex-col md:flex-row justify-between items-center px-6 md:px-10 py-6 bg-stone-900 border-b border-stone-800 sticky top-0 z-50">
+        <a href="index.html" class="text-2xl font-serif font-bold text-stone-300 tracking-tight mb-4 md:mb-0 hover:text-white transition-colors">
+            ARTISAN.
+        </a>
+        
+        <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-stone-400 font-medium text-xs uppercase tracking-widest">
+            <a href="index.html" class="hover:text-stone-200 transition-colors">Home</a>
+            <a href="shop.html" class="hover:text-stone-200 transition-colors">Shop</a>
+            <a href="blog.html" class="hover:text-stone-200 transition-colors">Journal</a>
+            <a id="nav-dashboard" href="admin.html" class="hidden text-amber-500 hover:text-amber-200 transition-colors font-bold">Dashboard</a>
+            <button id="nav-logout" onclick="logout()" class="hidden text-red-400 hover:text-red-300 transition-colors uppercase text-[10px] tracking-widest font-bold">Logout</button>
+            <a id="nav-login" href="login.html" class="hover:text-stone-200 transition-colors">Login</a>
+        </div>
+
+        <a href="cart.html" class="text-stone-300 font-medium text-sm mt-4 md:mt-0 hover:text-white flex items-center gap-2">
+            <span class="uppercase text-[10px] tracking-widest">Cart</span>
+            <span id="nav-cart-count" class="bg-stone-800 px-2 py-0.5 rounded-full text-xs">(0)</span>
+        </a>
+    </nav>
+
+    <div class="min-h-screen bg-stone-50 pb-20 animate-fadeIn">
+        <div class="max-w-7xl mx-auto px-6 pt-16 pb-12">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <nav class="text-[10px] uppercase tracking-[0.3em] text-stone-400 mb-2">
+                        Home <span class="text-stone-900 font-bold">Catalog</span>
+                    </nav>
+                    <h1 class="font-serif text-4xl text-stone-900 uppercase">Our Collection</h1>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-[9px] uppercase tracking-widest text-stone-400 mb-1 font-bold">Filter</label>
+                        <select id="filter-select" class="bg-white border border-stone-200 text-stone-800 text-xs rounded-lg px-4 py-2 outline-none focus:border-stone-400 cursor-pointer">
+                            <option value="All">All Categories</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label class="text-[9px] uppercase tracking-widest text-stone-400 mb-1 font-bold">Sort By</label>
+                        <select id="sort-select" class="bg-white border border-stone-200 text-stone-800 text-xs rounded-lg px-4 py-2 outline-none focus:border-stone-400 cursor-pointer">
+                            <option value="Default">Default</option>
+                            <option value="Name">Name (A-Z)</option>
+                            <option value="Price: Low to High">Price: Low to High</option>
+                            <option value="Price: High to Low">Price: High to Low</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="products-grid" class="max-w-7xl mx-auto px-6 md:px-10 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+            <!-- Products will be loaded here -->
+        </div>
+
+        <div id="empty-state" class="text-center py-20 hidden">
+            <p class="text-stone-400 font-serif italic text-lg">No items found in this category.</p>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-6 md:px-10 mt-20 flex flex-col items-center gap-6">
+            <p id="item-count" class="text-stone-400 text-[10px] uppercase tracking-widest font-medium">0 items showing</p>
+            <div class="w-48 h-[1px] bg-stone-100 relative">
+                <div class="absolute left-0 top-0 h-full bg-stone-900 w-full"></div>
+            </div>
+            <p class="text-stone-300 text-[9px] uppercase tracking-[0.2em]">End of Collection</p>
+        </div>
+    </div>
+
+    <script>
+        function loadProducts() {
+        const storedProducts = localStorage.getItem('products');
+        if (storedProducts) {
+            return JSON.parse(storedProducts);
+        } else {
+            // Default products if none exist
+            const defaultProducts = [
+                { id: 1, name: 'Ceramic Plates', price: 12, category: 'Pottery', img: 'images/handimadepottery.jpg' },
+            { id: 2, name: 'Nordic', price: 18, category: 'Pottery', img: 'images/Nordic.jpg' },
+            { id: 3, name: 'Ceramic Plates', price: 45, category: 'Pottery', img: 'images/cp.jpg' },
+            { id: 4, name: 'Candle Holder', price: 34, category: 'Candle Holder', img: 'images/sc.jpg' },
+            { id: 5, name: 'Knitted Cord', price: 20, category: 'Woven Crochet', img: 'images/kcc.jpg' },
+            { id: 6, name: 'Hanging Wall Woven', price: 50, category: 'Woven', img: 'images/wwh.jpg' },
+            { id: 7, name: 'Clay Wall Decore', price: 12, category: 'Decor', img: 'images/taoc.jpg' },
+            { id: 8, name: 'Hand Painted Vase', price: 18, category: 'Pottery', img: 'images/hpv.jpg' },
+            { id: 9, name: 'Silver Earings', price: 12, category: 'Jewelry', img: 'images/sfe.jpg' },
+            { id: 10, name: 'Glass Art', price: 18, category: 'Glass Art', img: 'images/glassart.jpg' },
+            { id: 11, name: 'Stone Lockets', price: 45, category: 'Jewelry', img: 'images/ss.jpg' },
+            { id: 12, name: 'Wooden Frame', price: 34, category: 'Wood Work', img: 'images/wcf.jpg' },
+            { id: 13, title: 'Fine Lockets', price: 25, category: 'Jewelry', image: 'images/finejewel.jpg' },
+            { id: 14, title: 'Wooden Box', price: 34, category: 'Decor', image: 'images/wboxs.jpg' }
+            ];
+            localStorage.setItem('products', JSON.stringify(defaultProducts));
+            return defaultProducts;
+        }
+    }
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'products') {
+            products = JSON.parse(e.newValue);
+            renderProducts(); // Re-render the shop
+        }
+    });
+  let products = loadProducts();
+
+
+        let currentFilter = 'All';
+        let currentSort = 'Default';
+
+        function updateNavbar() {
+            const role = localStorage.getItem('userRole');
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            const cartCountElement = document.getElementById('nav-cart-count');
+            if (cartCountElement) cartCountElement.innerText = `(${cartCount})`;
+
+            const dashboardLink = document.getElementById('nav-dashboard');
+            const logoutBtn = document.getElementById('nav-logout');
+            const loginLink = document.getElementById('nav-login');
+
+            if (role === 'admin') {
+                if (dashboardLink) dashboardLink.classList.remove('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                if (loginLink) loginLink.classList.add('hidden');
+            } else if (role === 'guest') {
+                if (dashboardLink) dashboardLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                if (loginLink) loginLink.classList.add('hidden');
+            } else {
+                if (dashboardLink) dashboardLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+                if (loginLink) loginLink.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'index.html';
+        }
+
+        function addToCart(product) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === product.id);
+            
+            if (existingItem) {
+                existingItem.quantity = (existingItem.quantity || 1) + 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    title: product.name,
+                    price: parseFloat(product.price),
+                    img: product.img,
+                    image: product.img,
+                    category: product.category,
+                    quantity: 1
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${product.name} added to cart!`);
+            updateNavbar();
+        }
+
+        function renderProducts() {
+            let filtered = currentFilter === 'All' ? products : products.filter(p => p.category === currentFilter);
+            
+            if (currentSort === 'Name') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (currentSort === 'Price: Low to High') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (currentSort === 'Price: High to Low') {
+                filtered.sort((a, b) => b.price - a.price);
+            }
+            
+            const grid = document.getElementById('products-grid');
+            const emptyState = document.getElementById('empty-state');
+            const itemCount = document.getElementById('item-count');
+            
+            if (filtered.length === 0) {
+                if (grid) grid.classList.add('hidden');
+                if (emptyState) emptyState.classList.remove('hidden');
+                if (itemCount) itemCount.innerText = '0 items showing';
+                return;
+            }
+            
+            if (grid) grid.classList.remove('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+            if (itemCount) itemCount.innerText = `${filtered.length} items showing`;
+            
+            if (grid) {
+                grid.innerHTML = filtered.map(product => `
+                    <div class="flex flex-col group">
+                        <div class="aspect-square bg-stone-200 rounded-2xl overflow-hidden mb-4 border border-stone-200/50">
+                            <img 
+                                src="${product.img}" 
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                alt="${product.name}"
+                                onerror="this.src='https://placehold.co/400x400/F4EFE6/4A3022?text=ARTISAN'"
+                            />
+                        </div>
+                        <h3 class="text-stone-400 text-[10px] uppercase tracking-widest mb-1 font-bold">${product.category}</h3>
+                        <h4 class="text-stone-800 text-[11px] font-bold mb-1 uppercase truncate">${product.name}</h4>
+                        <p class="text-stone-900 font-bold text-lg mb-4">$${product.price.toFixed(2)}</p>
+                        <button 
+                            onclick='addToCart(${JSON.stringify(product)})'
+                            class="w-full bg-stone-900 text-white py-3 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-stone-700 transition-all shadow-sm active:scale-95"
+                        >
+                            Add to cart
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function populateCategories() {
+            const categories = ['All', ...new Set(products.map(p => p.category))];
+            const filterSelect = document.getElementById('filter-select');
+            if (filterSelect) {
+                filterSelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat === 'All' ? 'All Categories' : cat}</option>`).join('');
+            }
+        }
+
+        // Event Listeners
+        const filterSelect = document.getElementById('filter-select');
+        const sortSelect = document.getElementById('sort-select');
+        
+        if (filterSelect) {
+            filterSelect.addEventListener('change', (e) => {
+                currentFilter = e.target.value;
+                renderProducts();
+            });
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderProducts();
+            });
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            populateCategories();
+            renderProducts();
+            updateNavbar();
+        });
+
+        // Make functions global
+        window.addToCart = addToCart;
+        window.logout = logout;
+    </script>
+</body>
+</html>

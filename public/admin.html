@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | ARTISAN.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+    // Security Guard: Check if the user is actually an admin
+    if (localStorage.getItem('userRole') !== 'admin') {
+        alert("Access Denied. Admins only.");
+        window.location.href = 'login.html';
+    }
+    </script>
+</head>
+<body class="bg-stone-50 font-sans text-stone-900">
+<nav class="flex flex-col md:flex-row justify-between items-center px-6 md:px-10 py-6 bg-stone-900 border-b border-stone-800 sticky top-0 z-50">
+    <a href="index.html" class="text-2xl font-serif font-bold text-stone-300 tracking-tight mb-4 md:mb-0 hover:text-white transition-colors">
+        ARTISAN.
+    </a>
+    
+    <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-stone-400 font-medium text-xs uppercase tracking-widest">
+        <a href="index.html" class="hover:text-stone-200 transition-colors">Home</a>
+        <a href="shop.html" class="hover:text-stone-200 transition-colors">Shop</a>
+        <a href="blog.html" class="hover:text-stone-200 transition-colors">Journal</a>
+        
+        <a id="nav-dashboard" href="admin.html" class="text-amber-500 hover:text-amber-200 transition-colors font-bold">Dashboard</a>
+        
+        <button id="nav-logout" onclick="logout()" class="text-red-400 hover:text-red-300 transition-colors uppercase text-[10px] tracking-widest font-bold">
+            Logout
+        </button>
+
+        <a id="nav-login" href="login.html" class="hidden hover:text-stone-200 transition-colors">Login</a>
+    </div>
+
+    <a href="cart.html" class="text-stone-300 font-medium text-sm mt-4 md:mt-0 hover:text-white flex items-center gap-2">
+        <span class="uppercase text-[10px] tracking-widest">Cart</span>
+        <span id="nav-cart-count" class="bg-stone-800 px-2 py-0.5 rounded-full text-xs">(0)</span>
+    </a>
+</nav>
+
+<script>
+    function updateNavbar() {
+        const role = localStorage.getItem('userRole');
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // Update Cart Count
+        const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        const cartCountElement = document.getElementById('nav-cart-count');
+        if (cartCountElement) cartCountElement.innerText = `(${cartCount})`;
+
+        // Show/Hide Admin Links
+        const dashboardLink = document.getElementById('nav-dashboard');
+        const logoutBtn = document.getElementById('nav-logout');
+        const loginLink = document.getElementById('nav-login');
+
+        if (role === 'admin') {
+            if (dashboardLink) dashboardLink.classList.remove('hidden');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginLink) loginLink.classList.add('hidden');
+        } else if (role === 'guest') {
+            if (dashboardLink) dashboardLink.classList.add('hidden');
+            if (logoutBtn) logoutBtn.classList.remove('hidden');
+            if (loginLink) loginLink.classList.add('hidden');
+        } else {
+            if (dashboardLink) dashboardLink.classList.add('hidden');
+            if (logoutBtn) logoutBtn.classList.add('hidden');
+            if (loginLink) loginLink.classList.remove('hidden');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', updateNavbar);
+</script>
+
+    <div class="min-h-screen p-6 md:p-12">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+                <div>
+                    <h1 class="text-4xl font-serif text-stone-900 mb-2">Management Dashboard</h1>
+                    <p class="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-bold">
+                        Artisan Admin Control • 2026
+                    </p>
+                </div>
+                <div id="status-indicator" class="flex items-center gap-3 bg-white px-4 py-2 border border-stone-200 rounded-full shadow-sm">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] uppercase tracking-widest font-bold text-stone-600">System Live</span>
+                </div>
+            </div>
+
+            <div class="flex gap-10 border-b border-stone-200 mb-10">
+                <button onclick="switchTab('inventory')" id="tab-inventory" class="pb-4 text-xs uppercase tracking-widest font-bold border-b-2 border-stone-900 text-stone-900 transition-all">
+                    Inventory Management
+                </button>
+                <button onclick="switchTab('orders')" id="tab-orders" class="pb-4 text-xs uppercase tracking-widest font-bold text-stone-400 hover:text-stone-600 transition-all">
+                    Recent Orders
+                </button>
+            </div>
+
+            <div id="inventory-content" class="space-y-10">
+                <div class="bg-stone-900 p-8 rounded-sm shadow-2xl flex flex-col lg:flex-row gap-8">
+                    <div class="w-full lg:w-48 h-48 bg-stone-800 border border-stone-700 flex items-center justify-center overflow-hidden">
+                        <img id="preview-img" src="https://via.placeholder.com/300?text=Preview" class="w-full h-full object-cover">
+                    </div>
+
+                    <form onsubmit="handleAddProduct(event)" class="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="text-[9px] uppercase tracking-widest text-stone-500 block mb-1">Image URL</label>
+                            <input type="text" id="new-img" oninput="updatePreview()" required class="w-full bg-stone-800 border-none text-white p-3 text-sm focus:ring-1 ring-stone-500" placeholder="https://images.unsplash.com/...">
+                        </div>
+                        <div>
+                            <label class="text-[9px] uppercase tracking-widest text-stone-500 block mb-1">Product Name</label>
+                            <input type="text" id="new-name" required class="w-full bg-stone-800 border-none text-white p-3 text-sm">
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-1/2">
+                                <label class="text-[9px] uppercase tracking-widest text-stone-500 block mb-1">Price (€)</label>
+                                <input type="number" step="0.01" id="new-price" required class="w-full bg-stone-800 border-none text-white p-3 text-sm">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-[9px] uppercase tracking-widest text-stone-500 block mb-1">Category</label>
+                                <input type="text" id="new-cat" required class="w-full bg-stone-800 border-none text-white p-3 text-sm">
+                            </div>
+                        </div>
+                        <button type="submit" class="md:col-span-2 bg-white text-stone-900 py-3 font-bold uppercase text-[10px] tracking-widest hover:bg-stone-200 transition-all">
+                            Add to Inventory
+                        </button>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <h3 class="text-stone-900 font-serif text-2xl mb-2">Current Collection</h3>
+                    <div id="product-list" class="space-y-4">
+                        </div>
+                </div>
+            </div>
+
+            <div id="orders-content" class="hidden bg-white border border-stone-200 rounded-sm overflow-hidden">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-stone-900 text-white text-[10px] uppercase tracking-widest">
+                            <th class="p-5">Reference</th>
+                            <th class="p-5">Client</th>
+                            <th class="p-5">Items</th>
+                            <th class="p-5 text-right">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-list" class="divide-y divide-stone-100 text-sm">
+                        </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <h2 class="text-xl font-serif mb-4">Edit Product</h2>
+            <form onsubmit="handleUpdateProduct(event)">
+                <input type="hidden" id="edit-id">
+                <div class="mb-4">
+                    <label class="text-[10px] uppercase tracking-widest text-stone-500 block mb-1">Image URL</label>
+                    <input type="text" id="edit-img" required class="w-full border border-stone-200 p-2 text-sm rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="text-[10px] uppercase tracking-widest text-stone-500 block mb-1">Product Name</label>
+                    <input type="text" id="edit-name" required class="w-full border border-stone-200 p-2 text-sm rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="text-[10px] uppercase tracking-widest text-stone-500 block mb-1">Price (€)</label>
+                    <input type="number" step="0.01" id="edit-price" required class="w-full border border-stone-200 p-2 text-sm rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="text-[10px] uppercase tracking-widest text-stone-500 block mb-1">Category</label>
+                    <input type="text" id="edit-cat" required class="w-full border border-stone-200 p-2 text-sm rounded">
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-stone-900 text-white py-2 text-xs uppercase tracking-widest font-bold rounded hover:bg-stone-700">Save Changes</button>
+                    <button type="button" onclick="closeEditModal()" class="flex-1 border border-stone-300 py-2 text-xs uppercase tracking-widest font-bold rounded hover:bg-stone-100">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get products from localStorage or initialize with default products
+        function getProducts() {
+            const defaultProducts = [
+        { id: 1, name: 'Ceramic Plates', price: 12, category: 'Pottery', img: 'images/handimadepottery.jpg' },
+        { id: 2, name: 'Nordic', price: 18, category: 'Pottery', img: 'images/Nordic.jpg' },
+        { id: 3, name: 'Ceramic Plates', price: 45, category: 'Pottery', img: 'images/cp.jpg' },
+        { id: 4, name: 'Candle Holder', price: 34, category: 'Candle Holder', img: 'images/sc.jpg' },
+        { id: 5, name: 'Knitted Cord', price: 20, category: 'Woven Crochet', img: 'images/kcc.jpg' },
+        { id: 6, name: 'Hanging Wall Woven', price: 50, category: 'Woven', img: 'images/wwh.jpg' },
+        { id: 7, name: 'Clay Wall Decore', price: 12, category: 'Decor', img: 'images/taoc.jpg' },
+        { id: 8, name: 'Hand Painted Vase', price: 18, category: 'Pottery', img: 'images/hpv.jpg' },
+        { id: 9, name: 'Silver Earings', price: 12, category: 'Jewelry', img: 'images/sfe.jpg' },
+        { id: 10, name: 'Glass Art', price: 18, category: 'Glass Art', img: 'images/glassart.jpg' },
+        { id: 11, name: 'Stone Lockets', price: 45, category: 'Jewelry', img: 'images/ss.jpg' },
+        { id: 12, name: 'Wooden Frame', price: 34, category: 'Wood Work', img: 'images/wcf.jpg' },
+        { id: 13, name: 'Fine Lockets', price: 25, category: 'Jewelry', img: 'images/finejewel.jpg' }
+    ];
+           const stored = localStorage.getItem('products');
+    if (stored) {
+        return JSON.parse(stored);
+    } else {
+        localStorage.setItem('products', JSON.stringify(defaultProducts));
+        return defaultProducts;
+    }
+}
+
+        function saveProducts(products) {
+            localStorage.setItem('products', JSON.stringify(products));
+            // Trigger storage event for shop.html to update
+            window.dispatchEvent(new StorageEvent('storage', { key: 'products', newValue: JSON.stringify(products) }));
+        }
+
+        function getOrders() {
+            const stored = localStorage.getItem('orders');
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        // Render products with Edit and Delete buttons
+        function renderProducts() {
+            const products = getProducts();
+            const list = document.getElementById('product-list');
+            
+            if (products.length === 0) {
+                list.innerHTML = '<div class="text-center py-10 text-stone-400 italic">No products in inventory. Add your first product above.</div>';
+                return;
+            }
+            
+            list.innerHTML = products.map(p => `
+                <div class="bg-white border border-stone-200 p-6 flex items-center justify-between group hover:shadow-lg transition-all">
+                    <div class="flex items-center gap-6">
+                        <img src="${p.img}" class="w-16 h-16 object-cover bg-stone-100 rounded" onerror="this.src='https://via.placeholder.com/64?text=No+Image'">
+                        <div>
+                            <h4 class="text-lg text-stone-900 font-medium">${escapeHtml(p.name)}</h4>
+                            <div class="flex gap-4 items-center mt-1">
+                                <span class="text-[10px] uppercase tracking-widest text-stone-400">${escapeHtml(p.category)}</span>
+                                <span class="text-sm font-bold text-stone-900">€${Number(p.price).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditModal(${p.id})" class="text-amber-600 hover:text-amber-800 text-[10px] uppercase font-bold tracking-widest px-3 py-1 border border-amber-200 rounded hover:bg-amber-50 transition-all">
+                            Edit
+                        </button>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700 text-[10px] uppercase font-bold tracking-widest px-3 py-1 border border-red-200 rounded hover:bg-red-50 transition-all">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrders() {
+            const orders = getOrders();
+            const list = document.getElementById('orders-list');
+            
+            if (orders.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-stone-400 italic">No orders yet.</td></tr>`;
+                return;
+            }
+            
+            list.innerHTML = orders.map(o => `
+                <tr class="hover:bg-stone-50">
+                    <td class="p-5 font-mono text-xs">#${o.orderId?.slice(-6) || 'N/A'}</td>
+                    <td class="p-5 font-medium">${escapeHtml(o.customerName || 'Guest')}</td>
+                    <td class="p-5 text-stone-500">${o.items?.length || 0} items</td>
+                    <td class="p-5 text-right font-bold">€${Number(o.total).toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // Add new product
+        function handleAddProduct(e) {
+            e.preventDefault();
+            const products = getProducts();
+            
+            const newId = Date.now();
+            const newProduct = {
+                id: newId,
+                name: document.getElementById('new-name').value,
+                price: parseFloat(document.getElementById('new-price').value),
+                img: document.getElementById('new-img').value,
+                category: document.getElementById('new-cat').value
+            };
+            
+            products.push(newProduct);
+            saveProducts(products);
+            
+            // Reset form
+            e.target.reset();
+            document.getElementById('preview-img').src = 'https://via.placeholder.com/300?text=Preview';
+            
+            // Refresh displays
+            renderProducts();
+            
+            alert(`"${newProduct.name}" has been added to the collection!`);
+        }
+
+        // Delete product
+        function deleteProduct(id) {
+            if (confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+                let products = getProducts();
+                const productToDelete = products.find(p => p.id === id);
+                products = products.filter(p => p.id !== id);
+                saveProducts(products);
+                renderProducts();
+                
+                // Also remove from any carts
+                let carts = JSON.parse(localStorage.getItem('cart')) || [];
+                carts = carts.filter(item => item.id !== id);
+                localStorage.setItem('cart', JSON.stringify(carts));
+                
+                alert(`"${productToDelete?.name}" has been deleted.`);
+            }
+        }
+
+        // Open edit modal
+        function openEditModal(id) {
+            const products = getProducts();
+            const product = products.find(p => p.id === id);
+            
+            if (product) {
+                document.getElementById('edit-id').value = product.id;
+                document.getElementById('edit-name').value = product.name;
+                document.getElementById('edit-price').value = product.price;
+                document.getElementById('edit-img').value = product.img;
+                document.getElementById('edit-cat').value = product.category;
+                document.getElementById('editModal').classList.remove('hidden');
+            }
+        }
+
+        // Update product
+        function handleUpdateProduct(e) {
+            e.preventDefault();
+            
+            const id = parseInt(document.getElementById('edit-id').value);
+            const updatedProduct = {
+                id: id,
+                name: document.getElementById('edit-name').value,
+                price: parseFloat(document.getElementById('edit-price').value),
+                img: document.getElementById('edit-img').value,
+                category: document.getElementById('edit-cat').value
+            };
+            
+            let products = getProducts();
+            const index = products.findIndex(p => p.id === id);
+            
+            if (index !== -1) {
+                products[index] = updatedProduct;
+                saveProducts(products);
+                renderProducts();
+                closeEditModal();
+                alert(`"${updatedProduct.name}" has been updated.`);
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        // UI Tab Switching
+        function switchTab(tab) {
+            const invContent = document.getElementById('inventory-content');
+            const ordContent = document.getElementById('orders-content');
+            const invTab = document.getElementById('tab-inventory');
+            const ordTab = document.getElementById('tab-orders');
+
+            if(tab === 'inventory') {
+                invContent.classList.remove('hidden');
+                ordContent.classList.add('hidden');
+                invTab.className = "pb-4 text-xs uppercase tracking-widest font-bold border-b-2 border-stone-900 text-stone-900";
+                ordTab.className = "pb-4 text-xs uppercase tracking-widest font-bold text-stone-400 hover:text-stone-600";
+                renderProducts(); // Refresh products when switching to inventory tab
+            } else {
+                invContent.classList.add('hidden');
+                ordContent.classList.remove('hidden');
+                ordTab.className = "pb-4 text-xs uppercase tracking-widest font-bold border-b-2 border-stone-900 text-stone-900";
+                invTab.className = "pb-4 text-xs uppercase tracking-widest font-bold text-stone-400 hover:text-stone-600";
+                renderOrders(); // Refresh orders when switching to orders tab
+            }
+        }
+
+        function updatePreview() {
+            const val = document.getElementById('new-img').value;
+            const preview = document.getElementById('preview-img');
+            if (preview) {
+                preview.src = val || 'https://via.placeholder.com/300?text=Preview';
+            }
+        }
+
+        // Load data on page load
+        window.onload = () => {
+            renderProducts();
+            renderOrders();
+            updateNavbar();
+        };
+
+        // Make functions global for onclick handlers
+        window.switchTab = switchTab;
+        window.handleAddProduct = handleAddProduct;
+        window.deleteProduct = deleteProduct;
+        window.openEditModal = openEditModal;
+        window.handleUpdateProduct = handleUpdateProduct;
+        window.closeEditModal = closeEditModal;
+        window.updatePreview = updatePreview;
+        window.logout = logout;
+    </script>
+</body>
+</html>

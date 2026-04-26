@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal | Velvet Crumb</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { brand: { cream: '#F4EFE6', brown: '#4A3022', accent: '#855E42' } },
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-stone-100 font-sans text-stone-900">
+<nav class="flex flex-col md:flex-row justify-between items-center px-6 md:px-10 py-6 bg-stone-900 border-b border-stone-800 sticky top-0 z-50">
+    <a href="index.html" class="text-2xl font-serif font-bold text-stone-300 tracking-tight mb-4 md:mb-0 hover:text-white transition-colors">
+        ARTISAN.
+    </a>
+    
+    <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-stone-400 font-medium text-xs uppercase tracking-widest">
+        <a href="index.html" class="hover:text-stone-200 transition-colors">Home</a>
+        <a href="shop.html" class="hover:text-stone-200 transition-colors">Shop</a>
+        <a href="blog.html" class="hover:text-stone-200 transition-colors">Journal</a>
+        
+        <a id="nav-dashboard" href="admin.html" class="hidden text-amber-500 hover:text-amber-200 transition-colors font-bold">Dashboard</a>
+        
+        <button id="nav-logout" onclick="logout()" class="hidden text-red-400 hover:text-red-300 transition-colors uppercase text-[10px] tracking-widest font-bold">
+            Logout
+        </button>
+
+        <a id="nav-login" href="login.html" class="hover:text-stone-200 transition-colors">Login</a>
+    </div>
+
+    <a href="cart.html" class="text-stone-300 font-medium text-sm mt-4 md:mt-0 hover:text-white flex items-center gap-2">
+        <span class="uppercase text-[10px] tracking-widest">Cart</span>
+        <span id="nav-cart-count" class="bg-stone-800 px-2 py-0.5 rounded-full text-xs">(0)</span>
+    </a>
+</nav>
+
+<script>
+    function updateNavbar() {
+        const role = localStorage.getItem('userRole'); // We used 'userRole' in your login.html
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // Update Cart Count
+        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('nav-cart-count').innerText = `(${cartCount})`;
+
+        // Show/Hide Admin Links
+        if (role === 'admin') {
+            document.getElementById('nav-dashboard').classList.remove('hidden');
+            document.getElementById('nav-logout').classList.remove('hidden');
+            document.getElementById('nav-login').classList.add('hidden');
+        } else if (role === 'guest') {
+            document.getElementById('nav-logout').classList.remove('hidden');
+            document.getElementById('nav-login').classList.add('hidden');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('userRole');
+        // Optional: localStorage.removeItem('cart'); // Keep this if you want cart to persist after logout
+        window.location.href = 'index.html';
+    }
+
+    // Run this whenever the page loads
+    window.addEventListener('DOMContentLoaded', updateNavbar);
+</script>
+    <section class="relative w-full py-6 animate-fadeIn">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="relative h-[350px] md:h-[450px] w-full overflow-hidden rounded-sm group">
+                <img src="images/jb3.jpg" alt="Journal Banner" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105">
+                <div class="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-center px-4">
+                    <span class="bg-white text-stone-900 text-[10px] uppercase tracking-[0.3em] font-bold px-4 py-1.5 rounded-sm mb-6">Latest</span>
+                    <h1 class="text-white text-4xl md:text-6xl font-serif mb-4 drop-shadow-sm leading-tight">The Art of Slow Living</h1>
+                    <p class="text-stone-100 text-xs md:text-sm tracking-widest uppercase font-light max-w-lg">Before you curate your first collection...</p>
+                    <div class="w-12 h-[1px] bg-white/50 mt-8"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-6 md:px-10 py-12 max-w-5xl mx-auto border-b border-stone-200">
+        <div class="group cursor-pointer grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 items-center">
+            <div class="md:col-span-6 overflow-hidden aspect-[4/5] bg-stone-100 rounded-sm shadow-sm">
+                <img src="images/b1.jpg" alt="Featured" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000">
+            </div>
+            <div class="md:col-span-6 space-y-5">
+                <div class="space-y-2">
+                    <span class="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-bold block">Featured Story</span>
+                    <h2 class="text-2xl md:text-4xl font-serif text-stone-900 leading-tight group-hover:text-stone-700 transition-colors">
+                        Behind the Workbench: A Morning with Master Woodworkers.
+                    </h2>
+                </div>
+                <p class="text-stone-500 text-sm leading-relaxed max-w-md">
+                    We spent a week in a small workshop in the outskirts of Rawalpindi to understand the patience required for true heirloom-quality woodwork.
+                </p>
+                <div class="pt-4">
+                    <a href="#" class="border-b border-stone-900 text-stone-900 text-[10px] uppercase tracking-widest font-bold hover:text-stone-500 hover:border-stone-500 transition-all pb-1">Read Full Story</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-6 md:px-10 py-24 max-w-7xl mx-auto">
+        <div id="blog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            </div>
+
+        <div class="mt-20 flex justify-center items-center gap-4 border-t border-stone-200 pt-10">
+            <button class="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold">Prev</button>
+            <span class="bg-stone-900 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs">1</span>
+            <button class="text-[10px] uppercase tracking-[0.2em] text-stone-900 font-bold hover:text-stone-500">2</button>
+            <button class="text-[10px] uppercase tracking-[0.2em] text-stone-900 font-bold hover:text-stone-500">Next</button>
+        </div>
+    </section>
+
+    <section class="bg-stone-900 py-20 px-6">
+        <div class="max-w-2xl mx-auto text-center">
+            <h2 class="text-white font-serif text-3xl mb-4">Join our Mailing List</h2>
+            <p class="text-stone-400 text-xs uppercase tracking-widest mb-8">Get artisan stories and shop updates directly to your inbox</p>
+            <form onsubmit="handleSubscribe(event)" class="flex flex-col md:flex-row gap-4">
+                <input type="email" required placeholder="Your email address" class="flex-grow bg-transparent border border-stone-700 px-6 py-4 text-white text-sm focus:outline-none focus:border-stone-400 transition-colors">
+                <button class="bg-white text-stone-900 px-10 py-4 text-xs uppercase tracking-widest font-bold hover:bg-stone-200 transition-all">Subscribe</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        const blogPosts = [
+            { id: 1, category: 'Craftsmanship', title: 'The Art of Slow Living and Handmade Pottery', excerpt: 'Discover why the tactile nature of clay is becoming a modern sanctuary for the busy soul.', date: 'Oct 12, 2025', img: 'images/pb.jpg' },
+            { id: 2, category: 'Interiors', title: 'Minimalism: How to Curate Your Living Space', excerpt: 'Quality over quantity. We explore how three key artisan pieces can transform a room.', date: 'Sep 28, 2025', img: 'images/in.jpg' },
+            { id: 3, category: 'Sustainability', title: 'The Journey of Organic Textiles', excerpt: 'From seed to loom, understanding the ethical footprint of your favorite linens.', date: 'Sep 15, 2025', img: 'images/wt.jpg' }
+        ];
+
+        function renderBlogs() {
+            const container = document.getElementById('blog-grid');
+            container.innerHTML = blogPosts.map(post => `
+                <article class="group flex flex-col animate-fadeIn">
+                    <div class="overflow-hidden aspect-[4/3] mb-6 bg-stone-200">
+                        <img src="${post.img}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-[10px] uppercase tracking-widest text-stone-400 font-bold">
+                            <span>${post.category}</span>
+                            <span>${post.date}</span>
+                        </div>
+                        <h3 class="text-xl font-serif text-stone-900 group-hover:text-stone-600 transition-colors">${post.title}</h3>
+                        <p class="text-stone-500 text-sm leading-relaxed line-clamp-2">${post.excerpt}</p>
+                        <a href="blog-detail.html?id=${post.id}" class="inline-block pt-2 text-[10px] uppercase tracking-widest font-bold text-stone-900 hover:text-stone-500 transition-colors">Continue Reading →</a>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function handleSubscribe(e) {
+            e.preventDefault();
+            alert("Thank you for subscribing to Velvet Crumb!");
+            e.target.reset();
+        }
+
+        window.onload = renderBlogs;
+    </script>
+</body>
+</html>

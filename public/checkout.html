@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | ARTISAN.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-white font-sans text-stone-900">
+    <nav class="flex flex-col md:flex-row justify-between items-center px-6 md:px-10 py-6 bg-stone-900 border-b border-stone-800 sticky top-0 z-50">
+        <a href="index.html" class="text-2xl font-serif font-bold text-stone-300 tracking-tight mb-4 md:mb-0 hover:text-white transition-colors">
+            ARTISAN.
+        </a>
+        
+        <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-stone-400 font-medium text-xs uppercase tracking-widest">
+            <a href="index.html" class="hover:text-stone-200 transition-colors">Home</a>
+            <a href="shop.html" class="hover:text-stone-200 transition-colors">Shop</a>
+            <a href="blog.html" class="hover:text-stone-200 transition-colors">Journal</a>
+            
+            <a id="nav-dashboard" href="admin.html" class="hidden text-amber-500 hover:text-amber-200 transition-colors font-bold">Dashboard</a>
+            
+            <button id="nav-logout" onclick="logout()" class="hidden text-red-400 hover:text-red-300 transition-colors uppercase text-[10px] tracking-widest font-bold">
+                Logout
+            </button>
+
+            <a id="nav-login" href="login.html" class="hover:text-stone-200 transition-colors">Login</a>
+        </div>
+
+        <a href="cart.html" class="text-stone-300 font-medium text-sm mt-4 md:mt-0 hover:text-white flex items-center gap-2">
+            <span class="uppercase text-[10px] tracking-widest">Cart</span>
+            <span id="nav-cart-count" class="bg-stone-800 px-2 py-0.5 rounded-full text-xs">(0)</span>
+        </a>
+    </nav>
+
+    <script>
+        function updateNavbar() {
+            const role = localStorage.getItem('userRole');
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            // Update Cart Count
+            const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            const cartCountElement = document.getElementById('nav-cart-count');
+            if (cartCountElement) cartCountElement.innerText = `(${cartCount})`;
+
+            // Show/Hide Admin Links
+            const dashboardLink = document.getElementById('nav-dashboard');
+            const logoutBtn = document.getElementById('nav-logout');
+            const loginLink = document.getElementById('nav-login');
+
+            if (role === 'admin') {
+                if (dashboardLink) dashboardLink.classList.remove('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                if (loginLink) loginLink.classList.add('hidden');
+            } else if (role === 'guest') {
+                if (dashboardLink) dashboardLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+                if (loginLink) loginLink.classList.add('hidden');
+            } else {
+                if (dashboardLink) dashboardLink.classList.add('hidden');
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+                if (loginLink) loginLink.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('userRole');
+            window.location.href = 'index.html';
+        }
+
+        // Run this whenever the page loads
+        window.addEventListener('DOMContentLoaded', updateNavbar);
+    </script>
+
+    <div id="checkout-container" class="py-20 px-6 max-w-4xl mx-auto animate-fadeIn">
+        <h1 class="text-3xl font-serif mb-10">Checkout</h1>
+        
+        <form id="checkoutForm" onsubmit="handlePlaceOrder(event)" class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div class="space-y-4">
+                <h2 class="text-xs uppercase tracking-widest font-bold text-stone-400 mb-4">Shipping Details</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="firstName" required class="border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="First Name">
+                    <input type="text" id="lastName" required class="border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="Last Name">
+                </div>
+                <input type="email" id="email" required class="w-full border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="Email Address">
+                <input type="text" id="address" required class="w-full border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="Address">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="city" required class="border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="City">
+                    <input type="text" id="postalCode" required class="border border-stone-200 p-3 text-sm focus:outline-stone-900" placeholder="Postal Code">
+                </div>
+            </div>
+
+            <div class="bg-stone-50 p-8 h-fit border border-stone-100">
+                <h2 class="text-xs uppercase tracking-widest font-bold text-stone-400 mb-6">Order Summary</h2>
+                <div id="summary-items" class="space-y-4 mb-6">
+                    <!-- Cart items will be displayed here -->
+                </div>
+                <div class="border-t border-stone-200 pt-4 space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span id="summary-subtotal">€0.00</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-lg pt-2">
+                        <span>Total</span>
+                        <span id="summary-total">€0.00</span>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-stone-900 text-white mt-8 py-4 text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 transition-all">
+                    Place Order
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="success-screen" class="hidden min-h-[80vh] flex flex-col items-center justify-center animate-fadeIn px-6 text-center">
+        <div class="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mb-8">
+            <svg class="w-10 h-10 text-stone-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <h1 class="text-4xl font-serif text-stone-900 mb-4">Thank you for your order.</h1>
+        <p class="text-stone-500 mb-10 max-w-sm">Your handmade pieces are being prepared. We've sent a confirmation email to your inbox.</p>
+        <a href="shop.html" class="bg-stone-900 text-white px-10 py-4 text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 transition-all">
+            Continue Shopping
+        </a>
+    </div>
+
+    <script>
+        // Function to render the order summary
+        function renderOrderSummary() {
+            // Get the most recent cart data from localStorage
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            const summaryContainer = document.getElementById('summary-items');
+            
+            if (!summaryContainer) return;
+            
+            let subtotal = 0;
+            summaryContainer.innerHTML = ''; // Clear old list
+
+            if (cartItems.length === 0) {
+                summaryContainer.innerHTML = '<p class="text-stone-400 text-sm italic">Your cart is empty.</p>';
+                document.getElementById('summary-subtotal').innerText = '€0.00';
+                document.getElementById('summary-total').innerText = '€0.00';
+                return;
+            }
+
+            cartItems.forEach(item => {
+                // Get product name (handle both 'name' and 'title' properties)
+                const productName = item.name || item.title || 'Artisan Piece';
+                const quantity = item.quantity || 1;
+                const price = parseFloat(item.price) || 0;
+                const itemTotal = price * quantity;
+                subtotal += itemTotal;
+
+                // Add the HTML for this item
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex justify-between text-sm';
+                itemElement.innerHTML = `
+                    <span class="text-stone-700">${productName} <span class="text-stone-400">(x${quantity})</span></span>
+                    <span class="font-medium">€${itemTotal.toFixed(2)}</span>
+                `;
+                summaryContainer.appendChild(itemElement);
+            });
+
+            // Update the Total displays
+            const subtotalElement = document.getElementById('summary-subtotal');
+            const totalElement = document.getElementById('summary-total');
+            
+            if (subtotalElement) subtotalElement.innerText = `€${subtotal.toFixed(2)}`;
+            if (totalElement) totalElement.innerText = `€${subtotal.toFixed(2)}`;
+            
+            // Store the subtotal in a global variable so handlePlaceOrder can access it
+            window.currentOrderTotal = subtotal;
+        }
+
+        // Function to handle order placement
+        async function handlePlaceOrder(e) {
+            e.preventDefault();
+            
+            // Get fresh cart data
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            if (cartItems.length === 0) {
+                alert('Your cart is empty. Please add items before checking out.');
+                const btn = document.getElementById('submitBtn');
+                if (btn) btn.disabled = false;
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "PROCESSING...";
+
+            // Get form values
+            const firstName = document.getElementById('firstName')?.value || '';
+            const lastName = document.getElementById('lastName')?.value || '';
+            const email = document.getElementById('email')?.value || '';
+            const address = document.getElementById('address')?.value || '';
+            const city = document.getElementById('city')?.value || '';
+            const postalCode = document.getElementById('postalCode')?.value || '';
+
+            // Calculate total
+            const subtotal = cartItems.reduce((acc, item) => acc + (parseFloat(item.price) || 0) * (item.quantity || 1), 0);
+
+            const orderData = {
+                orderId: `ORD-${Date.now()}`,
+                items: cartItems.map(item => ({
+                    id: item.id,
+                    name: item.name || item.title,
+                    price: parseFloat(item.price) || 0,
+                    quantity: item.quantity || 1,
+                    category: item.category
+                })),
+                total: subtotal,
+                customerName: `${firstName} ${lastName}`,
+                customerEmail: email,
+                shippingAddress: `${address}, ${city} (${postalCode})`,
+                status: 'Processing',
+                date: new Date().toLocaleString()
+            };
+
+            try {
+                // Try to send to server, but don't fail if server isn't running
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                }).catch(err => {
+                    console.warn('Server not available, saving order locally');
+                    return null;
+                });
+
+                // Always save order to localStorage as backup
+                const existingOrders = JSON.parse(localStorage.getItem('orders')) || [];
+                existingOrders.push(orderData);
+                localStorage.setItem('orders', JSON.stringify(existingOrders));
+                
+                // Clear the cart
+                localStorage.removeItem('cart');
+                
+                // Show success screen
+                const checkoutContainer = document.getElementById('checkout-container');
+                const successScreen = document.getElementById('success-screen');
+                
+                if (checkoutContainer) checkoutContainer.classList.add('hidden');
+                if (successScreen) successScreen.classList.remove('hidden');
+                
+                // Update navbar cart count
+                updateNavbar();
+                
+            } catch (err) {
+                console.error('Order error:', err);
+                alert("Order could not be processed. Please try again.");
+                btn.disabled = false;
+                btn.innerText = "PLACE ORDER";
+            }
+        }
+
+        // Check if cart is empty on page load and show message
+        function checkEmptyCart() {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (cartItems.length === 0 && submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.title = 'Your cart is empty';
+            } else if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOrderSummary();
+            checkEmptyCart();
+            updateNavbar();
+        });
+
+        // Make functions global for onclick handlers
+        window.handlePlaceOrder = handlePlaceOrder;
+        window.logout = logout;
+        
+        // Re-render when cart changes (in case user comes from another tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'cart') {
+                renderOrderSummary();
+                checkEmptyCart();
+                updateNavbar();
+            }
+        });
+    </script>
+</body>
+</html>

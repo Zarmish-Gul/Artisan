@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | ARTISAN.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-white font-sans text-stone-900">
+<nav class="flex flex-col md:flex-row justify-between items-center px-6 md:px-10 py-6 bg-stone-900 border-b border-stone-800 sticky top-0 z-50">
+    <a href="index.html" class="text-2xl font-serif font-bold text-stone-300 tracking-tight mb-4 md:mb-0 hover:text-white transition-colors">
+        ARTISAN.
+    </a>
+    
+    <div class="flex flex-wrap justify-center gap-4 md:gap-8 text-stone-400 font-medium text-xs uppercase tracking-widest">
+        <a href="index.html" class="hover:text-stone-200 transition-colors">Home</a>
+        <a href="shop.html" class="hover:text-stone-200 transition-colors">Shop</a>
+        <a href="blog.html" class="hover:text-stone-200 transition-colors">Journal</a>
+        
+        <a id="nav-dashboard" href="admin.html" class="hidden text-amber-500 hover:text-amber-200 transition-colors font-bold">Dashboard</a>
+        
+        <button id="nav-logout" onclick="logout()" class="hidden text-red-400 hover:text-red-300 transition-colors uppercase text-[10px] tracking-widest font-bold">
+            Logout
+        </button>
+
+        <a id="nav-login" href="login.html" class="hover:text-stone-200 transition-colors">Login</a>
+    </div>
+
+    <a href="cart.html" class="text-stone-300 font-medium text-sm mt-4 md:mt-0 hover:text-white flex items-center gap-2">
+        <span class="uppercase text-[10px] tracking-widest">Cart</span>
+        <span id="nav-cart-count" class="bg-stone-800 px-2 py-0.5 rounded-full text-xs">(0)</span>
+    </a>
+</nav>
+
+<script>
+    function updateNavbar() {
+        const role = localStorage.getItem('userRole'); // We used 'userRole' in your login.html
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // Update Cart Count
+        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('nav-cart-count').innerText = `(${cartCount})`;
+
+        // Show/Hide Admin Links
+        if (role === 'admin') {
+            document.getElementById('nav-dashboard').classList.remove('hidden');
+            document.getElementById('nav-logout').classList.remove('hidden');
+            document.getElementById('nav-login').classList.add('hidden');
+        } else if (role === 'guest') {
+            document.getElementById('nav-logout').classList.remove('hidden');
+            document.getElementById('nav-login').classList.add('hidden');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('userRole');
+        // Optional: localStorage.removeItem('cart'); // Keep this if you want cart to persist after logout
+        window.location.href = 'index.html';
+    }
+
+    // Run this whenever the page loads
+    window.addEventListener('DOMContentLoaded', updateNavbar);
+</script>
+    <div id="product-page" class="min-h-screen animate-fadeIn pb-12">
+        <div class="max-w-5xl mx-auto px-6 pt-10">
+            
+            <nav class="text-[9px] uppercase tracking-[0.2em] text-stone-400 mb-8">
+                <a href="index.html" class="hover:text-stone-900 transition-colors">Home</a> / 
+                <a href="shop.html" class="mx-2 hover:text-stone-900 transition-colors">Catalog</a> / 
+                <span id="breadcrumb-name" class="text-stone-900 font-medium">Loading...</span>
+            </nav>
+
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="w-full md:w-[45%]">
+                    <div class="aspect-square bg-stone-50 rounded-xl overflow-hidden border border-stone-100 shadow-sm">
+                        <img id="product-img" src="" alt="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
+                    </div>
+                </div>
+
+                <div class="w-full md:w-[50%] flex flex-col">
+                    <p id="product-cat" class="text-[10px] uppercase tracking-[0.3em] text-stone-400 mb-2 font-bold"></p>
+                    <h1 id="product-title" class="text-3xl font-serif text-stone-900 mb-4 leading-tight"></h1>
+                    <p id="product-price" class="text-xl text-stone-900 font-medium mb-6"></p>
+                    
+                    <p class="text-stone-500 text-sm leading-relaxed mb-8 max-w-sm">
+                        Meticulously crafted using traditional artisan techniques. This piece represents 
+                        our commitment to sustainable quality and timeless aesthetic design.
+                    </p>
+
+                    <div class="flex items-center gap-4 max-w-md">
+                        <div class="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white scale-90 origin-left">
+                            <button onclick="updateQty(-1)" class="px-4 py-2 hover:bg-stone-50 text-stone-400">–</button>
+                            <span id="quantity-display" class="px-4 py-2 text-xs font-bold w-10 text-center">1</span>
+                            <button onclick="updateQty(1)" class="px-4 py-2 hover:bg-stone-50 text-stone-400">+</button>
+                        </div>
+
+                        <button onclick="handleAddToCart()" class="flex-1 bg-stone-900 text-white py-3 rounded-lg text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 transition-all active:scale-[0.97]">
+                            Add To Cart
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-stone-100 space-y-3 text-[10px] uppercase tracking-widest text-stone-400">
+                        <div class="flex justify-between hover:text-stone-900 cursor-pointer"><span>Shipping & Returns</span><span>+</span></div>
+                        <div class="flex justify-between hover:text-stone-900 cursor-pointer"><span>Care Instructions</span><span>+</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="max-w-6xl bg-stone-50 mx-auto px-6 border-t border-stone-100 mt-20 rounded-2xl">
+                <div class="flex justify-center gap-10 py-6 text-[11px] uppercase tracking-widest font-bold text-stone-400">
+                    <span class="text-stone-900 border-b-2 border-stone-900 pb-1">Description</span>
+                    <span>Additional Info</span>
+                    <span>Reviews (0)</span>
+                </div>
+                <div class="py-8 pb-12 max-w-3xl mx-auto text-center text-stone-500 text-sm leading-relaxed">
+                    Each item is unique and made to order. Please allow 3-5 business days for packaging and dispatch. We use 100% plastic-free materials in all our shipping.
+                </div>
+            </section>
+
+           
+        </div>
+    </div>
+
+    <script>
+        // Use the products from your React code
+        const products = [
+            { id: 1, name: 'Ceramic Plates', price: 12, category: 'Pottery', img: 'images/handimadepottery.jpg' },
+            { id: 2, name: 'Nordic', price: 18, category: 'Pottery', img: 'images/Nordic.jpg' },
+            { id: 3, name: 'Ceramic Plates', price: 45, category: 'Pottery', img: 'images/cp.jpg' },
+            { id: 4, name: 'Candle Holder', price: 34, category: 'Candle Holder', img: 'images/sc.jpg' },
+            { id: 5, name: 'Knitted Cord', price: 20, category: 'Woven Crochet', img: 'images/kcc.jpg' },
+            { id: 6, name: 'Hanging Wall Woven', price: 50, category: 'Woven', img: 'images/wwh.jpg' },
+            { id: 7, name: 'Clay Wall Decore', price: 12, category: 'Decor', img: 'images/taoc.jpg' },
+            { id: 8, name: 'Hand Painted Vase', price: 18, category: 'Pottery', img: 'images/hpv.jpg' },
+            { id: 9, name: 'Silver Earings', price: 12, category: 'Jewelry', img: 'images/sfe.jpg' },
+            { id: 10, name: 'Glass Art', price: 18, category: 'Glass Art', img: 'images/glassart.jpg' },
+            { id: 11, name: 'Stone Lockets', price: 45, category: 'Jewelry', img: 'images/ss.jpg' },
+            { id: 12, name: 'Wooden Frame', price: 34, category: 'Wood Work', img: 'images/wcf.jpg' },
+            { id: 13, title: 'Fine Lockets', price: 25, category: 'Jewelry', image: 'images/finejewel.jpg' },
+            { id: 14, title: 'Wooden Box', price: 34, category: 'Decor', image: 'images/wboxs.jpg' }
+        ];
+
+        let currentQty = 1;
+        let currentProduct = null;
+
+        function init() {
+            // Get ID from URL: product.html?id=1
+            const params = new URLSearchParams(window.location.search);
+            const id = parseInt(params.get('id'));
+            
+            currentProduct = products.find(p => p.id === id);
+
+            if (!currentProduct) {
+                document.getElementById('product-page').innerHTML = `
+                    <div class="min-h-screen flex flex-col items-center justify-center p-20 text-center font-serif">
+                        <h2 class="text-2xl mb-4">Product not found.</h2>
+                        <a href="shop.html" class="text-xs uppercase tracking-widest underline">Return to Catalog</a>
+                    </div>`;
+                return;
+            }
+
+            // Fill page content
+            document.getElementById('breadcrumb-name').innerText = currentProduct.name;
+            document.getElementById('product-title').innerText = currentProduct.name;
+            document.getElementById('product-cat').innerText = currentProduct.category;
+            document.getElementById('product-price').innerText = `€${currentProduct.price.toFixed(2)}`;
+            document.getElementById('product-img').src = currentProduct.img;
+            document.getElementById('product-img').alt = currentProduct.name;
+
+            renderRelated();
+        }
+
+        function updateQty(val) {
+            currentQty = Math.max(1, currentQty + val);
+            document.getElementById('quantity-display').innerText = currentQty;
+        }
+
+        function handleAddToCart() {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            
+            // Check if item exists
+            const existing = cart.find(item => item.id === currentProduct.id);
+            if (existing) {
+                existing.quantity += currentQty;
+            } else {
+                cart.push({ ...currentProduct, quantity: currentQty });
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${currentProduct.name} added to cart!`);
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
