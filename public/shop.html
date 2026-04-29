@@ -19,6 +19,13 @@
     <style>
         .animate-fadeIn { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .product-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
     </style>
 </head>
 <body class="bg-white font-sans text-stone-900">
@@ -92,14 +99,9 @@
     </div>
 
     <script>
-        function loadProducts() {
-        const storedProducts = localStorage.getItem('products');
-        if (storedProducts) {
-            return JSON.parse(storedProducts);
-        } else {
-            // Default products if none exist
-            const defaultProducts = [
-                { id: 1, name: 'Ceramic Plates', price: 12, category: 'Pottery', img: 'images/handimadepottery.jpg' },
+        // YOUR ACTUAL PRODUCTS
+        const products = [
+            { id: 1, name: 'Ceramic Plates', price: 12, category: 'Pottery', img: 'images/handimadepottery.jpg' },
             { id: 2, name: 'Nordic', price: 18, category: 'Pottery', img: 'images/Nordic.jpg' },
             { id: 3, name: 'Ceramic Plates', price: 45, category: 'Pottery', img: 'images/cp.jpg' },
             { id: 4, name: 'Candle Holder', price: 34, category: 'Candle Holder', img: 'images/sc.jpg' },
@@ -110,21 +112,8 @@
             { id: 9, name: 'Silver Earings', price: 12, category: 'Jewelry', img: 'images/sfe.jpg' },
             { id: 10, name: 'Glass Art', price: 18, category: 'Glass Art', img: 'images/glassart.jpg' },
             { id: 11, name: 'Stone Lockets', price: 45, category: 'Jewelry', img: 'images/ss.jpg' },
-            { id: 12, name: 'Wooden Frame', price: 34, category: 'Wood Work', img: 'images/wcf.jpg' },
-           
-            ];
-            localStorage.setItem('products', JSON.stringify(defaultProducts));
-            return defaultProducts;
-        }
-    }
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'products') {
-            products = JSON.parse(e.newValue);
-            renderProducts(); // Re-render the shop
-        }
-    });
-  let products = loadProducts();
-
+            { id: 12, name: 'Wooden Frame', price: 34, category: 'Wood Work', img: 'images/wcf.jpg' }
+        ];
 
         let currentFilter = 'All';
         let currentSort = 'Default';
@@ -171,10 +160,8 @@
                 cart.push({
                     id: product.id,
                     name: product.name,
-                    title: product.name,
                     price: parseFloat(product.price),
                     img: product.img,
-                    image: product.img,
                     category: product.category,
                     quantity: 1
                 });
@@ -183,6 +170,11 @@
             localStorage.setItem('cart', JSON.stringify(cart));
             alert(`${product.name} added to cart!`);
             updateNavbar();
+        }
+
+        // Navigate to product detail page
+        function viewProductDetail(productId) {
+            window.location.href = `product-details.html?id=${productId}`;
         }
 
         function renderProducts() {
@@ -213,7 +205,7 @@
             
             if (grid) {
                 grid.innerHTML = filtered.map(product => `
-                    <div class="flex flex-col group">
+                    <div class="flex flex-col group product-card" onclick="viewProductDetail(${product.id})">
                         <div class="aspect-square bg-stone-200 rounded-2xl overflow-hidden mb-4 border border-stone-200/50">
                             <img 
                                 src="${product.img}" 
@@ -226,7 +218,7 @@
                         <h4 class="text-stone-800 text-[11px] font-bold mb-1 uppercase truncate">${product.name}</h4>
                         <p class="text-stone-900 font-bold text-lg mb-4">$${product.price.toFixed(2)}</p>
                         <button 
-                            onclick='addToCart(${JSON.stringify(product)})'
+                            onclick="event.stopPropagation(); addToCart(${JSON.stringify(product).replace(/"/g, '&quot;')})"
                             class="w-full bg-stone-900 text-white py-3 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-stone-700 transition-all shadow-sm active:scale-95"
                         >
                             Add to cart
@@ -272,6 +264,7 @@
         // Make functions global
         window.addToCart = addToCart;
         window.logout = logout;
+        window.viewProductDetail = viewProductDetail;
     </script>
 </body>
 </html>
